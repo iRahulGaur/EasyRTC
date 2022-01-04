@@ -1,10 +1,9 @@
-package com.cx.easyrtc.Socket;
+package com.cx.easyrtc.socket;
 
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.cx.easyrtc.Agent.Agent;
+import com.cx.easyrtc.agent.Agent;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;

@@ -1,4 +1,4 @@
-package com.cx.easyrtc.Agent;
+package com.cx.easyrtc.agent;
 
 /**
  * Created by cx on 2018/12/21.

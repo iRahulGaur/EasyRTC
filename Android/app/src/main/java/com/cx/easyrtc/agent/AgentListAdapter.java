@@ -1,4 +1,4 @@
-package com.cx.easyrtc.Agent;
+package com.cx.easyrtc.agent;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -13,7 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.cx.easyrtc.R;
-import com.cx.easyrtc.Socket.SocketWraper;
+import com.cx.easyrtc.socket.SocketWraper;
 
 import java.util.ArrayList;
 
@@ -23,13 +23,11 @@ import java.util.ArrayList;
 
 public class AgentListAdapter extends BaseAdapter{
 
-    private final String TAG = AgentListAdapter.class.getName();
+//    private final String TAG = AgentListAdapter.class.getName();
 
-    private ArrayList<Agent> mAgents;
+    private final ArrayList<Agent> mAgents;
 
-    private Context mContext;
-
-    private LayoutInflater mLayoutInflater;
+    private final LayoutInflater mLayoutInflater;
 
     private int mChooseItemIdx;
 
@@ -37,8 +35,7 @@ public class AgentListAdapter extends BaseAdapter{
 
     public AgentListAdapter(Context context) {
         super();
-        mContext = context;
-        mLayoutInflater = LayoutInflater.from(mContext);
+        mLayoutInflater = LayoutInflater.from(context);
         mAgents = new ArrayList<>();
         mChooseItemIdx = 0;
     }
@@ -47,9 +44,11 @@ public class AgentListAdapter extends BaseAdapter{
         mAgents.add(agent);
     }
 
+/*
     public void removeAgent(Agent agent) {
         mAgents.remove(agent);
     }
+*/
 
     public void update() {
         this.notifyDataSetChanged();

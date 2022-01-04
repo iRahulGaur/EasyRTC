@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
         <activity
-            android:name=".Activity.CallActivity"
+            android:name=".activity.CallActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.RTCActivity" />
+        <activity android:name=".activity.RTCActivity" />
     </application>
 
 </manifest>

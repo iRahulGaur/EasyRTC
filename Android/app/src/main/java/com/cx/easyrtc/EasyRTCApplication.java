@@ -3,7 +3,7 @@ package com.cx.easyrtc;
 import android.app.Application;
 import android.content.Context;
 import android.util.Log;
-import com.cx.easyrtc.Socket.SocketWraper;
+import com.cx.easyrtc.socket.SocketWraper;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,7 +21,7 @@ public class EasyRTCApplication extends Application{
 
         mContext = getApplicationContext();
 
-        SocketWraper.shareContext().connectToURL("https://b9c1-182-68-77-107.ngrok.io");
+        SocketWraper.shareContext().connectToURL("https://cc89-182-68-77-107.ngrok.io");
         initSocketHeartBeat();
     }
 

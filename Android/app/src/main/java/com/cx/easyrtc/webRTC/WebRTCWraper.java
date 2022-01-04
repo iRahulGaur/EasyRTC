@@ -1,4 +1,4 @@
-package com.cx.easyrtc.WebRTC;
+package com.cx.easyrtc.webRTC;
 
 import android.util.Log;
 
