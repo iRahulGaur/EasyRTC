@@ -21,7 +21,7 @@ public class EasyRTCApplication extends Application{
 
         mContext = getApplicationContext();
 
-        SocketWraper.shareContext().connectToURL("http://129.28.101.171:1234/");
+        SocketWraper.shareContext().connectToURL("https://b9c1-182-68-77-107.ngrok.io");
         initSocketHeartBeat();
     }
 

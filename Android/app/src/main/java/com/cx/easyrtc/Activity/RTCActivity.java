@@ -1,16 +1,13 @@
 package com.cx.easyrtc.Activity;
 
 import android.content.Intent;
-import android.graphics.Point;
 import android.opengl.GLSurfaceView;
-import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telecom.Call;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.cx.easyrtc.Agent.Agent;
 import com.cx.easyrtc.EasyRTCApplication;
@@ -24,27 +21,21 @@ import org.webrtc.MediaStream;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
 
-import java.lang.annotation.Target;
-import java.net.Socket;
 import java.util.ArrayList;
 
 public class RTCActivity extends AppCompatActivity implements SocketWraper.SocketDelegate, WebRTCWraper.RtcListener{
 
-    private final String TAG = RTCActivity.class.getName();
+//    private final String TAG = RTCActivity.class.getName();
 
     private String mCallStatus;
 
     private boolean mIfNeedAddStream;
 
-    private WebRTCWraper mRtcWraper;
+    private WebRTCWraper mRtcWrapper;
 
     private VideoRenderer.Callbacks mRtcLocalRender;
 
     private VideoRenderer.Callbacks mRtcRemoteRender;
-
-    private GLSurfaceView mGLView;
-
-    private ImageButton mCancenButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,20 +63,17 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
     }
 
     private void setButton() {
-        mCancenButton = findViewById(R.id.CancelButton);
-        mCancenButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.e("sliver", "cancel button clicked");
-                try {
-                    SocketWraper.shareContext().emit("exit", "yes");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                mRtcWraper.exitSession();
-                Intent intent = new Intent(RTCActivity.this, CallActivity.class);
-                startActivity(intent);
+        ImageButton mCancelButton = findViewById(R.id.CancelButton);
+        mCancelButton.setOnClickListener(view -> {
+            Log.e("sliver", "cancel button clicked");
+            try {
+                SocketWraper.shareContext().emit("exit", "yes");
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+            mRtcWrapper.exitSession();
+            Intent intent = new Intent(RTCActivity.this, CallActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -95,23 +83,14 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
 
     private void getType() {
         String remoteType = getIntent().getExtras().getString("type");
-        if (remoteType.equals("camera")) {
-            mIfNeedAddStream = false;
-        } else {
-            mIfNeedAddStream = true;
-        }
+        mIfNeedAddStream = !remoteType.equals("camera");
     }
 
     private void setGLView() {
-        mGLView = findViewById(R.id.glview);
+        GLSurfaceView mGLView = findViewById(R.id.glview);
         mGLView.setPreserveEGLContextOnPause(true);
         mGLView.setKeepScreenOn(true);
-        VideoRendererGui.setView(mGLView, new Runnable() {
-            @Override
-            public void run() {
-                setRtcWraper();
-            }
-        });
+        VideoRendererGui.setView(mGLView, this::setRtcWraper);
     }
 
     private void setVideoRender() {
@@ -127,14 +106,14 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
 
     private void setRtcWraper() {
         Log.e("sliver", "RTCActivity setRtcWraper");
-        mRtcWraper = new WebRTCWraper(this, VideoRendererGui.getEGLContext(), mIfNeedAddStream);
+        mRtcWrapper = new WebRTCWraper(this, VideoRendererGui.getEGLContext(), mIfNeedAddStream);
         setSocketWraper();
         createOfferOrAck();
     }
 
     private void createOfferOrAck() {
         if (mCallStatus.equals("send")) {
-            mRtcWraper.createOffer();
+            mRtcWrapper.createOffer();
         } else if (mCallStatus.equals("recv")) {
             SocketWraper.shareContext().ack(true);
         }
@@ -144,17 +123,17 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
         Log.e("sliver", "RTCActivity processSignalMsg " + type);
         if (target.equals(SocketWraper.shareContext().getUid())) {
             if (type.equals("offer")) {
-                Log.e("sliver", "RTCActivity receive offer " + mRtcWraper);
-                mRtcWraper.setRemoteSdp(type, value);
-                mRtcWraper.createAnswer();
+                Log.e("sliver", "RTCActivity receive offer " + mRtcWrapper);
+                mRtcWrapper.setRemoteSdp(type, value);
+                mRtcWrapper.createAnswer();
             }
 
             if (type.equals("answer")) {
-                mRtcWraper.setRemoteSdp(type, value);
+                mRtcWrapper.setRemoteSdp(type, value);
             }
 
             if (type.equals("exit")) {
-                mRtcWraper.exitSession();
+                mRtcWrapper.exitSession();
                 Intent intent = new Intent(RTCActivity.this, CallActivity.class);
                 startActivity(intent);
             }
@@ -171,12 +150,7 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
     @Override
     public void onDisConnect() {
         Log.e("sliver", "RTCActivity onDisConnect");
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(EasyRTCApplication.getContext(), "can't connect to server", Toast.LENGTH_LONG).show();
-            }
-        });
+        runOnUiThread(() -> Toast.makeText(EasyRTCApplication.getContext(), "can't connect to server", Toast.LENGTH_LONG).show());
     }
 
     @Override
@@ -187,7 +161,7 @@ public class RTCActivity extends AppCompatActivity implements SocketWraper.Socke
     @Override
     public void onRemoteCandidate(int label, String mid, String candidate) {
         Log.e("sliver", "RTCActivity onRemoteCandidate");
-        mRtcWraper.setCandidate(label, mid, candidate);
+        mRtcWrapper.setCandidate(label, mid, candidate);
     }
 
     @Override

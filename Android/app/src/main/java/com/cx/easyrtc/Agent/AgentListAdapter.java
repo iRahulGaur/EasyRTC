@@ -1,14 +1,16 @@
 package com.cx.easyrtc.Agent;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
 
 import com.cx.easyrtc.R;
 import com.cx.easyrtc.Socket.SocketWraper;
@@ -64,34 +66,31 @@ public class AgentListAdapter extends BaseAdapter{
         return mAgents.get(mChooseItemIdx);
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         if (view == null)
             view = mLayoutInflater.inflate(R.layout.agent_list_cell, null);
 
-        TextView textView = (TextView)view.findViewById(R.id.agent_list_cell_tv);
-        String showText = new String("name:" + mAgents.get(i).name() + " type:" + mAgents.get(i).type());
+        TextView textView = view.findViewById(R.id.agent_list_cell_tv);
+        String showText = "name:" + mAgents.get(i).name() + " type:" + mAgents.get(i).type();
         textView.setText(showText);
         if (mAgents.get(i).id().equals(SocketWraper.shareContext().getUid())) {
-            textView.setTextColor(Color.YELLOW);
+            textView.setTextColor(Color.BLUE);
         } else {
             textView.setTextColor(Color.RED);
         }
-        textView.setTag(new Integer(i));
+        textView.setTag(i);
         textView.setBackgroundColor(Color.WHITE);
 
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mChooseView != null) {
-                    mChooseView.setBackgroundColor(Color.WHITE);
-                }
-                view.setBackgroundColor(Color.GRAY);
-                Integer idx = (Integer)view.getTag();
-                mChooseItemIdx = idx.intValue();
-                mChooseView = view;
-                Log.e("sliver", "AgentListAdaper choose item idx:" + mChooseItemIdx);
+        textView.setOnClickListener(view1 -> {
+            if (mChooseView != null) {
+                mChooseView.setBackgroundColor(Color.WHITE);
             }
+            view1.setBackgroundColor(Color.GRAY);
+            mChooseItemIdx = (Integer) view1.getTag();
+            mChooseView = view1;
+            Log.e("sliver", "AgentListAdapter choose item idx:" + mChooseItemIdx);
         });
 
         return view;

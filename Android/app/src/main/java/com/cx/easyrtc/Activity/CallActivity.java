@@ -1,17 +1,14 @@
 package com.cx.easyrtc.Activity;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telecom.Call;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.cx.easyrtc.Agent.Agent;
 import com.cx.easyrtc.Agent.AgentListAdapter;
@@ -30,8 +27,6 @@ public class CallActivity extends AppCompatActivity implements SocketWraper.Sock
     private AgentListAdapter mAgentListAdapter;
 
     private AlertDialog mAlertDialog;
-
-    private ImageButton mCallButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,35 +65,26 @@ public class CallActivity extends AppCompatActivity implements SocketWraper.Sock
 
     private void setAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(CallActivity.this);
-        builder.setTitle("收到呼叫");
-        builder.setPositiveButton("接听", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Log.e("sliver", "CallActivity accept invite");
-                jumpToNextActivity("recv");
-            }
+        builder.setTitle("Received call");
+        builder.setPositiveButton("Answer", (dialogInterface, i) -> {
+            Log.e("sliver", "CallActivity accept invite");
+            jumpToNextActivity("recv");
         });
-        builder.setNegativeButton("挂断", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Log.e("sliver", "CallActivity refuse invite");
-                SocketWraper.shareContext().ack(false);
-            }
+        builder.setNegativeButton("hang up", (dialogInterface, i) -> {
+            Log.e("sliver", "CallActivity refuse invite");
+            SocketWraper.shareContext().ack(false);
         });
         mAlertDialog = builder.create();
     }
 
     private void setButton() {
-        mCallButton = findViewById(R.id.CallButton);
-        mCallButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.e("sliver", "CallActivity calll button clicked");
-                Agent agent = mAgentListAdapter.getChooseAgent();
-                if (agent != null) {
-                    SocketWraper.shareContext().setTarget(agent.id());
-                    SocketWraper.shareContext().invite();
-                }
+        ImageButton mCallButton = findViewById(R.id.CallButton);
+        mCallButton.setOnClickListener(view -> {
+            Log.e("sliver", "CallActivity call button clicked");
+            Agent agent = mAgentListAdapter.getChooseAgent();
+            if (agent != null) {
+                SocketWraper.shareContext().setTarget(agent.id());
+                SocketWraper.shareContext().invite();
             }
         });
     }
@@ -126,12 +112,7 @@ public class CallActivity extends AppCompatActivity implements SocketWraper.Sock
         if (target.equals(SocketWraper.shareContext().getUid())) {
             if (type.equals("invite")) {
                 SocketWraper.shareContext().setTarget(source);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAlertDialog.show();
-                    }
-                });
+                runOnUiThread(() -> mAlertDialog.show());
             }
             if (type.equals("ack")) {
                 if(value.equals("yes")) {
@@ -150,23 +131,13 @@ public class CallActivity extends AppCompatActivity implements SocketWraper.Sock
         for (int i = 0; i < agents.size(); i++) {
             mAgentListAdapter.addAgent(agents.get(i));
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mAgentListAdapter.update();
-            }
-        });
+        runOnUiThread(() -> mAgentListAdapter.update());
     }
 
     @Override
     public void onDisConnect() {
         Log.e("sliver", "CallActivity onDisConnect");
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(EasyRTCApplication.getContext(), "can't connect to server", Toast.LENGTH_LONG).show();
-            }
-        });
+        runOnUiThread(() -> Toast.makeText(EasyRTCApplication.getContext(), "can't connect to server", Toast.LENGTH_LONG).show());
     }
 
     @Override
