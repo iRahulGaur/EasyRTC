@@ -6,43 +6,32 @@
     android:layout_height="match_parent"
     tools:context="com.cx.easyrtc.activity.CallActivity">
 
-    <LinearLayout
+    <ListView
+        android:id="@+id/AgentsView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.85"
-            android:orientation="vertical">
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-            <ListView
-                android:id="@+id/AgentsView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-            </ListView>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:orientation="vertical">
-
-            <ImageButton
-                android:id="@+id/CallButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:background="@drawable/call"
-                android:contentDescription="@string/call_button"
-                android:rotation="180"
-                app:tint="@color/greenColor" />
-
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/CallButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:contentDescription="@string/call_button"
+            android:src="@drawable/call"
+            app:tint="@color/greenColor" />
 
     </LinearLayout>
 

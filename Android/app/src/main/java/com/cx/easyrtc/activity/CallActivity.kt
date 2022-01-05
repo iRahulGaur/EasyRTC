@@ -5,7 +5,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -47,11 +47,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
         permissionsBuilder(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO).build()
             .send { result ->
                 if (result.allGranted()) {
-                    Toast.makeText(
-                        this,
-                        "Permissions are working correctly",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.e(TAG, "all permissions granted")
                 } else {
                     val builder = AlertDialog.Builder(this@CallActivity)
                     builder.setTitle("Permission required")
@@ -110,7 +106,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     }
 
     private fun setButton() {
-        val mCallButton = findViewById<ImageButton>(R.id.CallButton)
+        val mCallButton = findViewById<ImageView>(R.id.CallButton)
         mCallButton.setOnClickListener {
             Log.e(TAG, "CallActivity call button clicked")
             val agent = mAgentListAdapter!!.chooseAgent

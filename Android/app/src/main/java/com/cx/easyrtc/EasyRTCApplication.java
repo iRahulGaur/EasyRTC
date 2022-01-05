@@ -17,7 +17,8 @@ public class EasyRTCApplication extends Application {
     private static final String TAG = "EasyRTCApplication";
     private static Context mContext;
 
-    private static final String SOCKET_BASE_LINK = "https://8e86-182-68-185-44.ngrok.io";
+//    private static final String SOCKET_BASE_LINK = "https://8e86-182-68-185-44.ngrok.io";
+    private static final String SOCKET_BASE_LINK = "http://192.168.1.16:1234";
 
     @Override
     public void onCreate() {

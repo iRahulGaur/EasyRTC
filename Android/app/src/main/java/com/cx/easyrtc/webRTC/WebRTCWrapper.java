@@ -119,8 +119,8 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
 
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1280)));
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(720)));
-        videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(25)));
-        videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(25)));
+        videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(60)));
+        videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
 
         mVideoSource = mPeerFactory.createVideoSource(getVideoCapture(), videoConstraints);
         mLocalMedia.addTrack(mPeerFactory.createVideoTrack("ARDAMSv0", mVideoSource));
@@ -142,6 +142,8 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
     @Override
     public void onCreateSuccess(SessionDescription sessionDescription) {
         Log.e(TAG, "WebRTCWrapper onCreateSuccess type:" + sessionDescription.type.canonicalForm());
+        Log.e(TAG, "this is sdp offer find a=mid:audio " + sessionDescription.description.contains("a=mid:video"));
+        Log.e(TAG, "this is sdp offer = "+sessionDescription.description);
         mPeer.setLocalDescription(this, sessionDescription);
         mListener.onCreateOfferOrAnswer(sessionDescription.type.canonicalForm(), sessionDescription.description);
     }

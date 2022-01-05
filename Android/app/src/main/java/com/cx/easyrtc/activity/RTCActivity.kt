@@ -4,7 +4,7 @@ import android.content.Intent
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.cx.easyrtc.EasyRTCApplication
@@ -56,7 +56,7 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     }
 
     private fun setButton() {
-        val mCancelButton = findViewById<ImageButton>(R.id.CancelButton)
+        val mCancelButton = findViewById<ImageView>(R.id.CancelButton)
         mCancelButton.setOnClickListener {
             Log.e(TAG, "cancel button clicked")
             try {
