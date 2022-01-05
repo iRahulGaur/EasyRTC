@@ -90,7 +90,9 @@ module.exports = function(socketio, agents) {
                 msg.value = msg.value.replace("a=mid:audio",`a=mid:audio\nb=AS:${audioBitRate}`);
                 console.log('value:' + msg.value);
             }
-            target.emit('event', msg);
+            if (target !== null) {
+                target.emit('event', msg);
+            }
         }
 
         function candidate(msg) {

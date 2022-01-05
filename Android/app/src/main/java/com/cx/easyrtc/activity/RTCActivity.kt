@@ -87,14 +87,24 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         VideoRendererGui.setView(mGLView) { setRtcWrapper() }
     }
 
+    @SuppressWarnings("INACCESSIBLE_TYPE")
     private fun setVideoRender() {
         mRtcLocalRender = VideoRendererGui.create(
-            0, 0, 100, 100,
-            RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
+            0,
+            0,
+            100,
+            100,
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL,
+            true
         )
+
         mRtcRemoteRender = VideoRendererGui.create(
-            0, 0, 100, 100,
-            RendererCommon.ScalingType.SCALE_ASPECT_FILL, false
+            0,
+            0,
+            100,
+            100,
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL,
+            false
         )
     }
 
@@ -146,7 +156,7 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         Log.e(TAG, "RTCActivity onDisConnect")
         runOnUiThread {
             Toast.makeText(
-                EasyRTCApplication.getContext(),
+                this,
                 "can't connect to server",
                 Toast.LENGTH_LONG
             ).show()

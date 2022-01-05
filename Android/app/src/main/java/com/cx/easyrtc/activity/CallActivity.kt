@@ -6,14 +6,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
-import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import com.cx.easyrtc.EasyRTCApplication
 import com.cx.easyrtc.R
 import com.cx.easyrtc.agent.Agent
-import com.cx.easyrtc.agent.AgentListAdapter
+import com.cx.easyrtc.agent.AgentAdapter
 import com.cx.easyrtc.socket.SocketWrapper
 import com.cx.easyrtc.socket.SocketWrapper.SocketDelegate
 import com.fondesa.kpermissions.allGranted
@@ -27,8 +27,8 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
         private const val TAG = "CallActivity"
     }
 
-    private var mAgentsView: ListView? = null
-    private var mAgentListAdapter: AgentListAdapter? = null
+    private var mAgentsView: RecyclerView? = null
+    private var mAgentListAdapter: AgentAdapter? = null
     private var mAlertDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,7 +109,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
         val mCallButton = findViewById<ImageView>(R.id.CallButton)
         mCallButton.setOnClickListener {
             Log.e(TAG, "CallActivity call button clicked")
-            val agent = mAgentListAdapter!!.chooseAgent
+            val agent = mAgentListAdapter?.chooseAgent
             if (agent != null) {
                 SocketWrapper.shareContext().target = agent.id
                 SocketWrapper.shareContext().invite()
@@ -118,15 +118,15 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     }
 
     private fun setAgents() {
-        mAgentListAdapter = AgentListAdapter(this)
+        mAgentListAdapter = AgentAdapter()
         mAgentsView!!.adapter = mAgentListAdapter
     }
 
     private fun jumpToNextActivity(status: String) {
         val intent = Intent(this@CallActivity, RTCActivity::class.java)
         intent.putExtra("status", status)
-        val agent = mAgentListAdapter!!.chooseAgent
-        if (agent.type == "Android_Camera") {
+        val agent = mAgentListAdapter?.chooseAgent
+        if (agent?.type == "Android_Camera") {
             intent.putExtra("type", "camera")
         } else {
             intent.putExtra("type", "client")
@@ -152,18 +152,18 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
 
     override fun onUserAgentsUpdate(agents: ArrayList<Agent>) {
         Log.e(TAG, "CallActivity onUserAgentsUpdate")
-        mAgentListAdapter!!.reset()
+        mAgentListAdapter?.reset()
         for (i in agents.indices) {
-            mAgentListAdapter!!.addAgent(agents[i])
+            mAgentListAdapter?.addAgent(agents[i])
         }
-        runOnUiThread { mAgentListAdapter!!.update() }
+        runOnUiThread { mAgentListAdapter?.update() }
     }
 
     override fun onDisConnect() {
         Log.e(TAG, "CallActivity onDisConnect")
         runOnUiThread {
             Toast.makeText(
-                EasyRTCApplication.getContext(),
+                this,
                 "can't connect to server",
                 Toast.LENGTH_LONG
             ).show()

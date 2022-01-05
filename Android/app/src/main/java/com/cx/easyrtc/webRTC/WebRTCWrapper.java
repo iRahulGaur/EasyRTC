@@ -1,5 +1,6 @@
 package com.cx.easyrtc.webRTC;
 
+import static org.webrtc.CameraEnumerationAndroid.getNameOfBackFacingDevice;
 import static org.webrtc.CameraEnumerationAndroid.getNameOfFrontFacingDevice;
 
 import android.util.Log;
@@ -122,7 +123,7 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(60)));
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
 
-        mVideoSource = mPeerFactory.createVideoSource(getVideoCapture(), videoConstraints);
+        mVideoSource = mPeerFactory.createVideoSource(getVideoCapture(true), videoConstraints);
         mLocalMedia.addTrack(mPeerFactory.createVideoTrack("ARDAMSv0", mVideoSource));
 
         AudioSource audioSource = mPeerFactory.createAudioSource(new MediaConstraints());
@@ -132,9 +133,14 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
             mListener.onLocalStream(mLocalMedia);
         }
     }
+    
+    private VideoCapturer getVideoCapture(boolean useFrontCamera) {
+        String frontCameraDeviceName;
+        if (useFrontCamera)
+            frontCameraDeviceName = getNameOfFrontFacingDevice();
+        else
+            frontCameraDeviceName = getNameOfBackFacingDevice();
 
-    private VideoCapturer getVideoCapture() {
-        String frontCameraDeviceName = getNameOfFrontFacingDevice();
         return VideoCapturerAndroid.create(frontCameraDeviceName);
     }
 
