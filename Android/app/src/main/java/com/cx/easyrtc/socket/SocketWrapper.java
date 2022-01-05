@@ -17,42 +17,41 @@ import java.util.ArrayList;
 /**
  * Created by cx on 2018/12/12.
  */
+public class SocketWrapper {
 
-public class SocketWraper {
-
-    private static final String TAG = "SocketWraper";
+    private static final String TAG = "SocketWrapper";
 
     private Socket mSignaling;
 
     private MessageProcessor mMsgProcessor;
 
-    private ArrayList<SocketDelegate> mListeners;
+    private final ArrayList<SocketDelegate> mListeners;
 
     private String uid;
 
     private String mTarget;
 
-    private static SocketWraper mShareContext;
+    private static SocketWrapper mShareContext;
 
     public interface SocketDelegate {
-        public void onUserAgentsUpdate(ArrayList<Agent> agents);
+        void onUserAgentsUpdate(ArrayList<Agent> agents);
 
-        public void onDisConnect();
+        void onDisConnect();
 
-        public void onRemoteEventMsg(String source, String target, String type, String value);
+        void onRemoteEventMsg(String source, String target, String type, String value);
 
-        public void onRemoteCandidate(int label, String mid, String candidate);
+        void onRemoteCandidate(int label, String mid, String candidate);
     }
 
-    public static synchronized SocketWraper shareContext() {
+    public static synchronized SocketWrapper shareContext() {
         if (mShareContext == null) {
-            mShareContext = new SocketWraper();
+            mShareContext = new SocketWrapper();
         }
         return mShareContext;
     }
 
-    public SocketWraper() {
-        mListeners = new ArrayList<SocketDelegate>();
+    public SocketWrapper() {
+        mListeners = new ArrayList<>();
     }
 
     @Override
@@ -87,10 +86,6 @@ public class SocketWraper {
         mSignaling.close();
     }
 
-    public void setSource(String source) {
-        uid = source;
-    }
-
     public String getUid() {
         return uid;
     }
@@ -112,7 +107,7 @@ public class SocketWraper {
         mSignaling.emit("event", msg);
     }
 
-    public void emit(String event, JSONObject object) throws JSONException{
+    public void emit(String event, JSONObject object) {
         mSignaling.emit(event, object);
     }
 
@@ -210,14 +205,9 @@ public class SocketWraper {
 
     private class MessageProcessor {
 
-        private Emitter.Listener onConnect = new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                Log.e("sliver", "SocketWraper SokcetWraper onConnect");
-            }
-        };
+        private final Emitter.Listener onConnect = args -> Log.e(TAG, "SocketWrapper SocketWrapper onConnect");
 
-        private Emitter.Listener onEvent = new Emitter.Listener() {
+        private final Emitter.Listener onEvent = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject data = (JSONObject)args[0];
@@ -227,9 +217,9 @@ public class SocketWraper {
                     String target = data.getString("target");
                     String value  = data.getString("value");
 
-                    synchronized (SocketWraper.shareContext()) {
-                        Log.e("sliver", "SocketWraper receive event type " + type + " size " + mListeners.size());
-                        for (SocketDelegate delegate : SocketWraper.shareContext().mListeners) {
+                    synchronized (SocketWrapper.shareContext()) {
+                        Log.e(TAG, "SocketWrapper receive event type " + type + " size " + mListeners.size());
+                        for (SocketDelegate delegate : SocketWrapper.shareContext().mListeners) {
                             delegate.onRemoteEventMsg(source, target, type, value);
                         }
                     }
@@ -241,41 +231,33 @@ public class SocketWraper {
             }
         };
 
-        private Emitter.Listener onCandidate = new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                Log.e("sliver", "SocketWraper receive remote candidate");
-                JSONObject data = (JSONObject)args[0];
-                try {
-                    int label = data.getInt("label");
-                    String mid = data.getString("mid");
-                    String candidate = data.getString("candidate");
+        private final Emitter.Listener onCandidate = args -> {
+            Log.e(TAG, "SocketWrapper receive remote candidate");
+            JSONObject data = (JSONObject)args[0];
+            try {
+                int label = data.getInt("label");
+                String mid = data.getString("mid");
+                String candidate = data.getString("candidate");
 
-                    synchronized (SocketWraper.shareContext()) {
-                        for (SocketDelegate delegate : SocketWraper.shareContext().mListeners) {
-                            delegate.onRemoteCandidate(label, mid, candidate);
-                        }
+                synchronized (SocketWrapper.shareContext()) {
+                    for (SocketDelegate delegate : SocketWrapper.shareContext().mListeners) {
+                        delegate.onRemoteCandidate(label, mid, candidate);
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-
-                verify("candidate");
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+
+            verify("candidate");
         };
 
-        private Emitter.Listener onGet = new Emitter.Listener() {
+        private final Emitter.Listener onGet = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject data = (JSONObject)args[0];
                 try {
-                    String source = data.getString("source");
-                    String target = data.getString("target");
-                    String type   = data.getString("type");
-                    String value  = data.getString("value");
-
-                    uid = value;
-                    Log.e("sliver", "SocketWraper get id : " + uid);
+                    uid = data.getString("value");
+                    Log.e(TAG, "SocketWrapper get id : " + uid);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -284,49 +266,40 @@ public class SocketWraper {
             }
         };
 
-        private Emitter.Listener onResponse = new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                JSONObject data = (JSONObject)args[0];
-                try {
-                    String source = data.getString("source");
-                    String target = data.getString("target");
-                    String type   = data.getString("type");
-                    String scnt  = data.getString("cnt");
-                    int cnt = Integer.parseInt(scnt);
+        private final Emitter.Listener onResponse = args -> {
+            JSONObject data = (JSONObject)args[0];
+            try {
+                String cntString  = data.getString("cnt");
+                int cnt = Integer.parseInt(cntString);
 
-                    Log.e("sliver", "SocketWraper cnt : " + cnt);
+                Log.e(TAG, "SocketWrapper cnt : " + cnt);
 
-                    ArrayList<Agent> list = new ArrayList<>();
+                ArrayList<Agent> list = new ArrayList<>();
 
-                    for (int i = 0; i < cnt; i++) {
-                        JSONObject object = (JSONObject) data.get(String.valueOf(i));
-                        String id = object.getString("id");
-                        String name = object.getString("name");
-                        String remoteType = object.getString("type");
+                for (int i = 0; i < cnt; i++) {
+                    JSONObject object = (JSONObject) data.get(String.valueOf(i));
+                    String id = object.getString("id");
+                    String name = object.getString("name");
+                    String remoteType = object.getString("type");
 
-                        list.add(new Agent(id, name, remoteType));
-                    }
-                    synchronized (SocketWraper.shareContext()) {
-                        for (SocketDelegate delegate : SocketWraper.shareContext().mListeners) {
-                            delegate.onUserAgentsUpdate(list);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    list.add(new Agent(id, name, remoteType));
                 }
-
-                verify("user_list");
+                synchronized (SocketWrapper.shareContext()) {
+                    for (SocketDelegate delegate : SocketWrapper.shareContext().mListeners) {
+                        delegate.onUserAgentsUpdate(list);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+
+            verify("user_list");
         };
 
-        private Emitter.Listener onDisconnect = new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                Log.e("sliver", "onDisconnect");
-                for (SocketDelegate delegate : SocketWraper.shareContext().mListeners) {
-                    delegate.onDisConnect();
-                }
+        private final Emitter.Listener onDisconnect = args -> {
+            Log.e(TAG, "onDisconnect");
+            for (SocketDelegate delegate : SocketWrapper.shareContext().mListeners) {
+                delegate.onDisConnect();
             }
         };
     }

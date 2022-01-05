@@ -1,5 +1,7 @@
 package com.cx.easyrtc.webRTC;
 
+import static org.webrtc.CameraEnumerationAndroid.getNameOfFrontFacingDevice;
+
 import android.util.Log;
 
 import org.webrtc.AudioSource;
@@ -20,26 +22,25 @@ import java.util.LinkedList;
 /**
  * Created by cx on 2018/12/12.
  */
+public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
 
-public class WebRTCWraper implements SdpObserver, PeerConnection.Observer{
-
-    private final String TAG = WebRTCWraper.class.getName();
+    private static final String TAG = "WebRTCWrapper";
 
     private PeerConnection mPeer;
 
-    private PeerConnectionFactory mPeerFactory;
+    private final PeerConnectionFactory mPeerFactory;
 
     private MediaStream mLocalMedia;
 
     private VideoSource mVideoSource;
 
-    private RtcListener mListener;
+    private final RtcListener mListener;
 
-    private LinkedList<PeerConnection.IceServer> mIceServers = new LinkedList<>();
+    private final LinkedList<PeerConnection.IceServer> mIceServers = new LinkedList<>();
 
-    private MediaConstraints mMediaConstraints = new MediaConstraints();
+    private final MediaConstraints mMediaConstraints = new MediaConstraints();
 
-    private boolean mIfNeedAddStream;
+    private final boolean mIfNeedAddStream;
 
     public interface RtcListener {
 
@@ -54,10 +55,10 @@ public class WebRTCWraper implements SdpObserver, PeerConnection.Observer{
         void onIceCandidate(int label, String id, String candidate);
     }
 
-    public WebRTCWraper(RtcListener listener, android.opengl.EGLContext eglContext, boolean ifNeedAddStream) {
+    public WebRTCWrapper(RtcListener listener, boolean ifNeedAddStream) {
         mListener = listener;
         mIfNeedAddStream = ifNeedAddStream;
-        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true, true, eglContext);
+        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true, true);
         mPeerFactory = new PeerConnectionFactory();
         mIceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
         mIceServers.add(new PeerConnection.IceServer("turn:129.28.101.171:3478","cx","cx1234"));
@@ -70,29 +71,29 @@ public class WebRTCWraper implements SdpObserver, PeerConnection.Observer{
     }
 
     public void createOffer() {
-        Log.e("sliver", "WebRTCWraper createOffer");
+        Log.e(TAG, "WebRTCWrapper createOffer");
         mPeer.createOffer(this, mMediaConstraints);
     }
 
     public void createAnswer() {
-        Log.e("sliver", "WebRTCWraper createAnswer");
+        Log.e(TAG, "WebRTCWrapper createAnswer");
         mPeer.createAnswer(this, mMediaConstraints);
     }
 
     public void setRemoteSdp(String type, String sdp) {
-        Log.e("sliver", "WebRTCWraper setRemoteSdp");
+        Log.e(TAG, "WebRTCWrapper setRemoteSdp");
         SessionDescription sessionDescription =
                 new SessionDescription(SessionDescription.Type.fromCanonicalForm(type), sdp);
         mPeer.setRemoteDescription(this, sessionDescription);
     }
 
     public void setCandidate(int label, String mid, String candidate) {
-        Log.e("sliver", "WebRTCWraper setRemoteCandidate");
+        Log.e(TAG, "WebRTCWrapper setRemoteCandidate");
         if (mPeer.getRemoteDescription() != null) {
             IceCandidate iceCandidate = new IceCandidate(mid, label, candidate);
             mPeer.addIceCandidate(iceCandidate);
         } else {
-            Log.e("sliver", "WebRTCWraper remote sdp is null when set candidate");
+            Log.e(TAG, "WebRTCWrapper remote sdp is null when set candidate");
         }
     }
 
@@ -121,7 +122,7 @@ public class WebRTCWraper implements SdpObserver, PeerConnection.Observer{
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(25)));
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(25)));
 
-        mVideoSource = mPeerFactory.createVideoSource(getVideoCaptureer(), videoConstraints);
+        mVideoSource = mPeerFactory.createVideoSource(getVideoCapture(), videoConstraints);
         mLocalMedia.addTrack(mPeerFactory.createVideoTrack("ARDAMSv0", mVideoSource));
 
         AudioSource audioSource = mPeerFactory.createAudioSource(new MediaConstraints());
@@ -132,78 +133,83 @@ public class WebRTCWraper implements SdpObserver, PeerConnection.Observer{
         }
     }
 
-    private VideoCapturer getVideoCaptureer() {
-        String frontCameraDeviceName = VideoCapturerAndroid.getNameOfFrontFacingDevice();
+    private VideoCapturer getVideoCapture() {
+        String frontCameraDeviceName = getNameOfFrontFacingDevice();
         return VideoCapturerAndroid.create(frontCameraDeviceName);
     }
 
-    //创建local sdp成功
+    //Successfully created local sdp
     @Override
     public void onCreateSuccess(SessionDescription sessionDescription) {
-        Log.e("sliver", "WebRTCWraper onCreateSuccess type:" + sessionDescription.type.canonicalForm());
+        Log.e(TAG, "WebRTCWrapper onCreateSuccess type:" + sessionDescription.type.canonicalForm());
         mPeer.setLocalDescription(this, sessionDescription);
         mListener.onCreateOfferOrAnswer(sessionDescription.type.canonicalForm(), sessionDescription.description);
     }
 
-    //设置remote sdp成功
+    //Set up remote sdp successfully
     @Override
     public void onSetSuccess() {
-        Log.e("sliver", "WebRTCWraper onSetSuccess");
+        Log.e(TAG, "WebRTCWrapper onSetSuccess");
     }
 
-    //创建local sdp成功
+    //Successfully created local sdp
     @Override
     public void onCreateFailure(String s) {
-        Log.e("sliver", "WebRTCWraper onCreateFailure error : " + s);
+        Log.e(TAG, "WebRTCWrapper onCreateFailure error : " + s);
     }
 
-    //设置remote sdp失败
+    //Failed to set remote sdp
     @Override
     public void onSetFailure(String s) {
-        Log.e("sliver", "WebRTCWraper onSetFailure error : " + s);
+        Log.e(TAG, "WebRTCWrapper onSetFailure error : " + s);
     }
 
-    //信令状态变化
+    //Signaling status change
     @Override
     public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-        Log.e("sliver", "WebRTCWraper onSignalingChange state : " + signalingState);
+        Log.e(TAG, "WebRTCWrapper onSignalingChange state : " + signalingState);
     }
 
     @Override
     public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-        Log.e("sliver", "WebRTCWraper onIceConnectionChange state : " + iceConnectionState);
+        Log.e(TAG, "WebRTCWrapper onIceConnectionChange state : " + iceConnectionState);
+    }
+
+    @Override
+    public void onIceConnectionReceivingChange(boolean b) {
+
     }
 
     @Override
     public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-        Log.e("sliver", "WebRTCWraper onIceGatheringChange state : " + iceGatheringState);
+        Log.e(TAG, "WebRTCWrapper onIceGatheringChange state : " + iceGatheringState);
     }
 
     @Override
     public void onIceCandidate(IceCandidate iceCandidate) {
-        Log.e("sliver", "WebRTCWraper onIceCandidate");
+        Log.e(TAG, "WebRTCWrapper onIceCandidate");
         mListener.onIceCandidate(iceCandidate.sdpMLineIndex, iceCandidate.sdpMid, iceCandidate.sdp);
     }
 
     @Override
     public void onAddStream(MediaStream mediaStream) {
-        Log.e("sliver", "WebRTCWraper onAddStream");
+        Log.e(TAG, "WebRTCWrapper onAddStream");
         mListener.onAddRemoteStream(mediaStream);
     }
 
     @Override
     public void onRemoveStream(MediaStream mediaStream) {
-        Log.e("sliver", "WebRTCWraper onRemoveStream");
+        Log.e(TAG, "WebRTCWrapper onRemoveStream");
         mListener.onRemoveRemoteStream(mediaStream);
     }
 
     @Override
     public void onDataChannel(DataChannel dataChannel) {
-        Log.e("sliver", "WebRTCWraper onDataChannel");
+        Log.e(TAG, "WebRTCWrapper onDataChannel");
     }
 
     @Override
     public void onRenegotiationNeeded() {
-        Log.e("sliver", "WebRTCWraper onRenegotiationNeeded");
+        Log.e(TAG, "WebRTCWrapper onRenegotiationNeeded");
     }
 }

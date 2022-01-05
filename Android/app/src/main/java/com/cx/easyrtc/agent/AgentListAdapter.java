@@ -3,6 +3,7 @@ package com.cx.easyrtc.agent;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,17 +14,14 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.cx.easyrtc.R;
-import com.cx.easyrtc.socket.SocketWraper;
+import com.cx.easyrtc.socket.SocketWrapper;
 
 import java.util.ArrayList;
 
 /**
  * Created by cx on 2018/12/14.
  */
-
-public class AgentListAdapter extends BaseAdapter{
-
-//    private final String TAG = AgentListAdapter.class.getName();
+public class AgentListAdapter extends BaseAdapter {
 
     private final ArrayList<Agent> mAgents;
 
@@ -44,12 +42,6 @@ public class AgentListAdapter extends BaseAdapter{
         mAgents.add(agent);
     }
 
-/*
-    public void removeAgent(Agent agent) {
-        mAgents.remove(agent);
-    }
-*/
-
     public void update() {
         this.notifyDataSetChanged();
     }
@@ -65,6 +57,8 @@ public class AgentListAdapter extends BaseAdapter{
         return mAgents.get(mChooseItemIdx);
     }
 
+    //todo socket error something
+
     @SuppressLint("InflateParams")
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
@@ -72,9 +66,14 @@ public class AgentListAdapter extends BaseAdapter{
             view = mLayoutInflater.inflate(R.layout.agent_list_cell, null);
 
         TextView textView = view.findViewById(R.id.agent_list_cell_tv);
-        String showText = "name:" + mAgents.get(i).name() + " type:" + mAgents.get(i).type();
+        String showText = "name:" + mAgents.get(i).getName() + " type:" + mAgents.get(i).getType();
+
+        if (mAgents.get(i).getName().contains(Build.MODEL)) {
+            showText += " (current)";
+        }
+
         textView.setText(showText);
-        if (mAgents.get(i).id().equals(SocketWraper.shareContext().getUid())) {
+        if (mAgents.get(i).getId().equals(SocketWrapper.shareContext().getUid())) {
             textView.setTextColor(Color.BLUE);
         } else {
             textView.setTextColor(Color.RED);
@@ -115,4 +114,5 @@ public class AgentListAdapter extends BaseAdapter{
     public Object getItem(int i) {
         return null;
     }
+
 }

@@ -5,6 +5,7 @@
       <map>
         <entry key="app/src/main/res/layout/activity_call.xml" value="0.29483695652173914" />
         <entry key="app/src/main/res/layout/activity_rtc.xml" value="0.18020833333333333" />
+        <entry key="app/src/main/res/layout/agent_list_cell.xml" value="0.29483695652173914" />
       </map>
     </option>
   </component>

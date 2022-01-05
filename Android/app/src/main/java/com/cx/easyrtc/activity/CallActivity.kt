@@ -14,14 +14,18 @@ import com.cx.easyrtc.EasyRTCApplication
 import com.cx.easyrtc.R
 import com.cx.easyrtc.agent.Agent
 import com.cx.easyrtc.agent.AgentListAdapter
-import com.cx.easyrtc.socket.SocketWraper
-import com.cx.easyrtc.socket.SocketWraper.SocketDelegate
+import com.cx.easyrtc.socket.SocketWrapper
+import com.cx.easyrtc.socket.SocketWrapper.SocketDelegate
 import com.fondesa.kpermissions.allGranted
 import com.fondesa.kpermissions.extension.permissionsBuilder
 import com.fondesa.kpermissions.extension.send
 import java.util.*
 
 class CallActivity : AppCompatActivity(), SocketDelegate {
+
+    companion object {
+        private const val TAG = "CallActivity"
+    }
 
     private var mAgentsView: ListView? = null
     private var mAgentListAdapter: AgentListAdapter? = null
@@ -30,7 +34,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_call)
-        Log.e("skruazzz", "CallActivity onCreate")
+        Log.e(TAG, "CallActivity onCreate")
 
         askPermissions()
         setUI()
@@ -53,11 +57,11 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
                     builder.setTitle("Permission required")
                     builder.setMessage("Camera and mic permission is required to make calls")
                     builder.setPositiveButton("ok") { _: DialogInterface?, _: Int ->
-                        Log.e("askPermissions", "show permission again")
+                        Log.e(TAG, "show permission again")
                         askPermissions()
                     }
                     builder.setNegativeButton("exit app") { _: DialogInterface?, _: Int ->
-                        Log.e("askPermissions", "exit app")
+                        Log.e(TAG, "exit app")
                         finish()
                     }
                     mAlertDialog = builder.create()
@@ -72,17 +76,17 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     }
 
     override fun onStop() {
-        Log.e("skruazzz", "CallActivity onStop")
-        SocketWraper.shareContext().removeListener(this)
+        Log.e(TAG, "CallActivity onStop")
+        SocketWrapper.shareContext().removeListener(this)
         super.onStop()
     }
 
     private fun setSocket() {
-        SocketWraper.shareContext().addListener(this)
+        SocketWrapper.shareContext().addListener(this)
     }
 
     private fun updateRemoteAgent() {
-        SocketWraper.shareContext().updateRemoteAgent()
+        SocketWrapper.shareContext().updateRemoteAgent()
     }
 
     private fun setUI() {
@@ -95,12 +99,12 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
         val builder = AlertDialog.Builder(this@CallActivity)
         builder.setTitle("Received call")
         builder.setPositiveButton("Answer") { _: DialogInterface?, _: Int ->
-            Log.e("sliver", "CallActivity accept invite")
+            Log.e(TAG, "CallActivity accept invite")
             jumpToNextActivity("recv")
         }
         builder.setNegativeButton("hang up") { _: DialogInterface?, _: Int ->
-            Log.e("sliver", "CallActivity refuse invite")
-            SocketWraper.shareContext().ack(false)
+            Log.e(TAG, "CallActivity refuse invite")
+            SocketWrapper.shareContext().ack(false)
         }
         mAlertDialog = builder.create()
     }
@@ -108,11 +112,11 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     private fun setButton() {
         val mCallButton = findViewById<ImageButton>(R.id.CallButton)
         mCallButton.setOnClickListener {
-            Log.e("sliver", "CallActivity call button clicked")
+            Log.e(TAG, "CallActivity call button clicked")
             val agent = mAgentListAdapter!!.chooseAgent
             if (agent != null) {
-                SocketWraper.shareContext().target = agent.id()
-                SocketWraper.shareContext().invite()
+                SocketWrapper.shareContext().target = agent.id
+                SocketWrapper.shareContext().invite()
             }
         }
     }
@@ -126,7 +130,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
         val intent = Intent(this@CallActivity, RTCActivity::class.java)
         intent.putExtra("status", status)
         val agent = mAgentListAdapter!!.chooseAgent
-        if (agent.type() == "Android_Camera") {
+        if (agent.type == "Android_Camera") {
             intent.putExtra("type", "camera")
         } else {
             intent.putExtra("type", "client")
@@ -135,9 +139,9 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     }
 
     private fun processSignal(source: String, target: String, type: String, value: String) {
-        if (target == SocketWraper.shareContext().uid) {
+        if (target == SocketWrapper.shareContext().uid) {
             if (type == "invite") {
-                SocketWraper.shareContext().target = source
+                SocketWrapper.shareContext().target = source
                 runOnUiThread { mAlertDialog!!.show() }
             }
             if (type == "ack") {
@@ -146,12 +150,12 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
                 }
             }
         } else {
-            Log.e("sliver", "CallActivity get error target")
+            Log.e(TAG, "CallActivity get error target")
         }
     }
 
     override fun onUserAgentsUpdate(agents: ArrayList<Agent>) {
-        Log.e("sliver", "CallActivity onUserAgentsUpdate")
+        Log.e(TAG, "CallActivity onUserAgentsUpdate")
         mAgentListAdapter!!.reset()
         for (i in agents.indices) {
             mAgentListAdapter!!.addAgent(agents[i])
@@ -160,7 +164,7 @@ class CallActivity : AppCompatActivity(), SocketDelegate {
     }
 
     override fun onDisConnect() {
-        Log.e("sliver", "CallActivity onDisConnect")
+        Log.e(TAG, "CallActivity onDisConnect")
         runOnUiThread {
             Toast.makeText(
                 EasyRTCApplication.getContext(),

@@ -39,9 +39,10 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
 
     //sockets
-    implementation 'com.github.nkzawa:socket.io-client:0.6.0'
+    implementation 'com.github.nkzawa:socket.io-client:0.4.2'
 
-    api 'io.pristine:libjingle:9127@aar'
+    //webRTC
+    api 'io.pristine:libjingle:11139@aar'
 
     //permissions
     implementation 'com.github.fondesa:kpermissions:3.3.0'

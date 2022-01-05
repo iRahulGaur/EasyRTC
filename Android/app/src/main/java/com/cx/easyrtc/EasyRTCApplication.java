@@ -3,25 +3,30 @@ package com.cx.easyrtc;
 import android.app.Application;
 import android.content.Context;
 import android.util.Log;
-import com.cx.easyrtc.socket.SocketWraper;
+
+import com.cx.easyrtc.socket.SocketWrapper;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
  * Created by cx on 2018/12/22.
  */
+public class EasyRTCApplication extends Application {
 
-public class EasyRTCApplication extends Application{
+    private static final String TAG = "EasyRTCApplication";
     private static Context mContext;
+
+    private static final String SOCKET_BASE_LINK = "https://8e86-182-68-185-44.ngrok.io";
 
     @Override
     public void onCreate() {
-        Log.e("sliver", "EasyRTCApplication SocketWrpaer setURL");
+        Log.e(TAG, "EasyRTCApplication SocketWrapper setURL");
         super.onCreate();
 
         mContext = getApplicationContext();
 
-        SocketWraper.shareContext().connectToURL("https://cc89-182-68-77-107.ngrok.io");
+        SocketWrapper.shareContext().connectToURL(SOCKET_BASE_LINK);
         initSocketHeartBeat();
     }
 
@@ -34,7 +39,7 @@ public class EasyRTCApplication extends Application{
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                SocketWraper.shareContext().keepAlive();
+                SocketWrapper.shareContext().keepAlive();
             }
         }, 0, 2000);
     }

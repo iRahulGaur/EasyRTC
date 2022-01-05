@@ -10,30 +10,34 @@ import androidx.appcompat.app.AppCompatActivity
 import com.cx.easyrtc.EasyRTCApplication
 import com.cx.easyrtc.R
 import com.cx.easyrtc.agent.Agent
-import com.cx.easyrtc.socket.SocketWraper
-import com.cx.easyrtc.socket.SocketWraper.SocketDelegate
-import com.cx.easyrtc.webRTC.WebRTCWraper
-import com.cx.easyrtc.webRTC.WebRTCWraper.RtcListener
+import com.cx.easyrtc.socket.SocketWrapper
+import com.cx.easyrtc.socket.SocketWrapper.SocketDelegate
+import com.cx.easyrtc.webRTC.WebRTCWrapper
+import com.cx.easyrtc.webRTC.WebRTCWrapper.RtcListener
 import org.json.JSONException
 import org.json.JSONObject
 import org.webrtc.MediaStream
+import org.webrtc.RendererCommon
 import org.webrtc.VideoRenderer
 import org.webrtc.VideoRendererGui
 import java.util.*
 
 class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
 
-    //    private final String TAG = RTCActivity.class.getName();
+    companion object {
+        private const val TAG = "RTCActivity"
+    }
+
     private var mCallStatus: String? = null
     private var mIfNeedAddStream = false
-    private var mRtcWrapper: WebRTCWraper? = null
+    private var mRtcWrapper: WebRTCWrapper? = null
     private var mRtcLocalRender: VideoRenderer.Callbacks? = null
     private var mRtcRemoteRender: VideoRenderer.Callbacks? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_rtc)
-        Log.e("skruazzz", "RTCActivity onCreate")
+        Log.e(TAG, "RTCActivity onCreate")
         setUI()
         callStatus
         type
@@ -42,8 +46,8 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     }
 
     override fun onStop() {
-        Log.e("skruazzz", "RTCActivity onStop")
-        SocketWraper.shareContext().removeListener(this)
+        Log.e(TAG, "RTCActivity onStop")
+        SocketWrapper.shareContext().removeListener(this)
         super.onStop()
     }
 
@@ -54,9 +58,9 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     private fun setButton() {
         val mCancelButton = findViewById<ImageButton>(R.id.CancelButton)
         mCancelButton.setOnClickListener {
-            Log.e("sliver", "cancel button clicked")
+            Log.e(TAG, "cancel button clicked")
             try {
-                SocketWraper.shareContext().emit("exit", "yes")
+                SocketWrapper.shareContext().emit("exit", "yes")
             } catch (e: JSONException) {
                 e.printStackTrace()
             }
@@ -86,21 +90,24 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     private fun setVideoRender() {
         mRtcLocalRender = VideoRendererGui.create(
             0, 0, 100, 100,
-            VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, true
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
         )
         mRtcRemoteRender = VideoRendererGui.create(
             0, 0, 100, 100,
-            VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, false
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL, false
         )
     }
 
     private fun setSocketWrapper() {
-        SocketWraper.shareContext().addListener(this)
+        SocketWrapper.shareContext().addListener(this)
     }
 
     private fun setRtcWrapper() {
-        Log.e("sliver", "RTCActivity setRtcWraper")
-        mRtcWrapper = WebRTCWraper(this, VideoRendererGui.getEGLContext(), mIfNeedAddStream)
+        Log.e(TAG, "RTCActivity setRtcWrapper")
+        mRtcWrapper = WebRTCWrapper(
+            this,
+            mIfNeedAddStream
+        )
         setSocketWrapper()
         createOfferOrAck()
     }
@@ -109,15 +116,15 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         if (mCallStatus == "send") {
             mRtcWrapper!!.createOffer()
         } else if (mCallStatus == "recv") {
-            SocketWraper.shareContext().ack(true)
+            SocketWrapper.shareContext().ack(true)
         }
     }
 
     private fun processSignalMsg(target: String, type: String, value: String) {
-        Log.e("sliver", "RTCActivity processSignalMsg $type")
-        if (target == SocketWraper.shareContext().uid) {
+        Log.e(TAG, "RTCActivity processSignalMsg $type")
+        if (target == SocketWrapper.shareContext().uid) {
             if (type == "offer") {
-                Log.e("sliver", "RTCActivity receive offer $mRtcWrapper")
+                Log.e(TAG, "RTCActivity receive offer $mRtcWrapper")
                 mRtcWrapper!!.setRemoteSdp(type, value)
                 mRtcWrapper!!.createAnswer()
             }
@@ -130,13 +137,13 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
                 startActivity(intent)
             }
         } else {
-            Log.e("sliver", "RTCActivity get error tag")
+            Log.e(TAG, "RTCActivity get error tag")
         }
     }
 
     override fun onUserAgentsUpdate(agents: ArrayList<Agent>) {}
     override fun onDisConnect() {
-        Log.e("sliver", "RTCActivity onDisConnect")
+        Log.e(TAG, "RTCActivity onDisConnect")
         runOnUiThread {
             Toast.makeText(
                 EasyRTCApplication.getContext(),
@@ -151,61 +158,61 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     }
 
     override fun onRemoteCandidate(label: Int, mid: String, candidate: String) {
-        Log.e("sliver", "RTCActivity onRemoteCandidate")
+        Log.e(TAG, "RTCActivity onRemoteCandidate")
         mRtcWrapper!!.setCandidate(label, mid, candidate)
     }
 
     override fun onLocalStream(mediaStream: MediaStream) {
-        Log.e("sliver", "RTCActivity onLocalStream")
+        Log.e(TAG, "RTCActivity onLocalStream")
         mediaStream.videoTracks[0].addRenderer(VideoRenderer(mRtcLocalRender))
         VideoRendererGui.update(
             mRtcLocalRender, 75, 75, 25, 25,
-            VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, true
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
         )
     }
 
     override fun onAddRemoteStream(mediaStream: MediaStream) {
-        Log.e("sliver", "RTCActivity onAddRemoteStream")
+        Log.e(TAG, "RTCActivity onAddRemoteStream")
         mediaStream.videoTracks[0].addRenderer(VideoRenderer(mRtcRemoteRender))
         VideoRendererGui.update(
             mRtcRemoteRender, 0, 0, 75, 75,
-            VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, true
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
         )
         if (mIfNeedAddStream) {
             VideoRendererGui.update(
                 mRtcLocalRender, 75, 75, 25, 25,
-                VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, true
+                RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
             )
         }
     }
 
     override fun onRemoveRemoteStream(mediaStream: MediaStream) {
-        Log.e("sliver", "RTCActivity onRemoveRemoteStream")
+        Log.e(TAG, "RTCActivity onRemoveRemoteStream")
         VideoRendererGui.update(
             mRtcLocalRender, 75, 75, 25, 25,
-            VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, true
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL, true
         )
     }
 
     override fun onCreateOfferOrAnswer(type: String, sdp: String) {
-        Log.e("sliver", "RTCActivity onCreateOfferOrAnswer")
+        Log.e(TAG, "RTCActivity onCreateOfferOrAnswer")
         try {
-            SocketWraper.shareContext().emit(type, sdp)
+            SocketWrapper.shareContext().emit(type, sdp)
         } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
 
     override fun onIceCandidate(label: Int, id: String, candidate: String) {
-        Log.e("sliver", "RTCActivity onIceCandidate")
+        Log.e(TAG, "RTCActivity onIceCandidate")
         try {
             val msg = JSONObject()
-            msg.put("source", SocketWraper.shareContext().uid)
-            msg.put("target", SocketWraper.shareContext().target)
+            msg.put("source", SocketWrapper.shareContext().uid)
+            msg.put("target", SocketWrapper.shareContext().target)
             msg.put("label", label)
             msg.put("mid", id)
             msg.put("candidate", candidate)
-            SocketWraper.shareContext().emit("candidate", msg)
+            SocketWrapper.shareContext().emit("candidate", msg)
         } catch (e: JSONException) {
             e.printStackTrace()
         }
