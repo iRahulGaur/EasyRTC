@@ -82,10 +82,15 @@ module.exports = function(socketio, agents) {
         function turn(msg) {
             var target = socketio.sockets.connected[msg.target];
             console.log(('receive event ' + msg.type + ' from ' + msg.source + ' to ' + msg.target).yellow);
-            target.emit('event', msg);
+            //a=mid:audio
             if (msg.type == 'offer' || msg.type == 'answer') {
+                const videoBitRate = 256
+                const audioBitRate = 50
+                msg.value = msg.value.replace("a=mid:video",`a=mid:video\nb=AS:${videoBitRate}`);
+                msg.value = msg.value.replace("a=mid:audio",`a=mid:audio\nb=AS:${audioBitRate}`);
                 console.log('value:' + msg.value);
-            }   
+            }
+            target.emit('event', msg);
         }
 
         function candidate(msg) {
