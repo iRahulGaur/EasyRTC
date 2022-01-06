@@ -29,7 +29,7 @@ class EasyRTCApplication : Application() {
     companion object {
         private const val TAG = "EasyRTCApplication"
 
-        //    private static final String SOCKET_BASE_LINK = "https://8e86-182-68-185-44.ngrok.io";
+//        private const val SOCKET_BASE_LINK = "https://4b78-182-64-42-239.ngrok.io"
         private const val SOCKET_BASE_LINK = "http://192.168.1.16:1234"
     }
 }

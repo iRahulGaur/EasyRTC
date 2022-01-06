@@ -1,17 +1,19 @@
 package com.cx.easyrtc.activity
 
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.cx.easyrtc.EasyRTCApplication
 import com.cx.easyrtc.R
 import com.cx.easyrtc.agent.Agent
 import com.cx.easyrtc.socket.SocketWrapper
 import com.cx.easyrtc.socket.SocketWrapper.SocketDelegate
+import com.cx.easyrtc.webRTC.RTCAudioManager
 import com.cx.easyrtc.webRTC.WebRTCWrapper
 import com.cx.easyrtc.webRTC.WebRTCWrapper.RtcListener
 import org.json.JSONException
@@ -33,6 +35,12 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     private var mRtcWrapper: WebRTCWrapper? = null
     private var mRtcLocalRender: VideoRenderer.Callbacks? = null
     private var mRtcRemoteRender: VideoRenderer.Callbacks? = null
+    private val mAudioManager by lazy { RTCAudioManager.create(this) }
+
+    private var isFrontCamera: Boolean = true
+    private var isMicMute: Boolean = false
+    private var isCameraOff: Boolean = false
+    private var isSpeakerOff: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +51,8 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         type
         setGLView()
         setVideoRender()
+        mAudioManager.selectAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE)
+        setSpeakerphoneOn()
     }
 
     override fun onStop() {
@@ -56,7 +66,12 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     }
 
     private fun setButton() {
-        val mCancelButton = findViewById<ImageView>(R.id.CancelButton)
+        val mCancelButton = findViewById<ImageView>(R.id.cancelButton)
+        val mSwitchCamera = findViewById<ImageView>(R.id.switchButton)
+        val mMuteMic = findViewById<ImageView>(R.id.micButton)
+        val mCameraOff = findViewById<ImageView>(R.id.videoButton)
+        val speakerButton = findViewById<ImageView>(R.id.speakerButton)
+
         mCancelButton.setOnClickListener {
             Log.e(TAG, "cancel button clicked")
             try {
@@ -68,6 +83,31 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
             val intent = Intent(this@RTCActivity, CallActivity::class.java)
             startActivity(intent)
         }
+
+        mSwitchCamera.setOnClickListener {
+            showToast("Switching camera")
+            mRtcWrapper?.changeCamera(isFrontCamera)
+            isFrontCamera = !isFrontCamera
+        }
+
+        mMuteMic.setOnClickListener {
+            showToast(if (!isMicMute) "Unmuting mic" else "Muting mic")
+            mRtcWrapper?.turnOffAudio(isMicMute)
+            isMicMute = !isMicMute
+        }
+
+        mCameraOff.setOnClickListener {
+            showToast(if (!isCameraOff) "Turning off your camera" else "Turning on your camera")
+            mRtcWrapper?.turnOffCamera(isCameraOff)
+            isCameraOff = !isCameraOff
+        }
+
+        speakerButton.setOnClickListener {
+            showToast(if (!isSpeakerOff) "Speaker on" else "Speaker off")
+            mRtcWrapper?.turnOffSpeaker(isSpeakerOff)
+            isSpeakerOff = !isSpeakerOff
+        }
+
     }
 
     private val callStatus: Unit
@@ -87,7 +127,13 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         VideoRendererGui.setView(mGLView) { setRtcWrapper() }
     }
 
-    @SuppressWarnings("INACCESSIBLE_TYPE")
+    private fun setSpeakerphoneOn() {
+        mAudioManager.setDefaultAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE)
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.isSpeakerphoneOn = true
+        mRtcWrapper?.setSpeakerphoneOn(this)
+    }
+
     private fun setVideoRender() {
         mRtcLocalRender = VideoRendererGui.create(
             0,
@@ -152,6 +198,7 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
     }
 
     override fun onUserAgentsUpdate(agents: ArrayList<Agent>) {}
+
     override fun onDisConnect() {
         Log.e(TAG, "RTCActivity onDisConnect")
         runOnUiThread {
@@ -226,5 +273,9 @@ class RTCActivity : AppCompatActivity(), SocketDelegate, RtcListener {
         } catch (e: JSONException) {
             e.printStackTrace()
         }
+    }
+
+    private fun showToast(msg: String){
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }

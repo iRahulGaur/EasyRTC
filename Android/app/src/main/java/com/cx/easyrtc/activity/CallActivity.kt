@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.cx.easyrtc.EasyRTCApplication
 import com.cx.easyrtc.R
 import com.cx.easyrtc.agent.Agent
 import com.cx.easyrtc.agent.AgentAdapter

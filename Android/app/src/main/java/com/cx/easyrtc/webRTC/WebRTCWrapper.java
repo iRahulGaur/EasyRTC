@@ -1,11 +1,15 @@
 package com.cx.easyrtc.webRTC;
 
-import static org.webrtc.CameraEnumerationAndroid.getNameOfBackFacingDevice;
 import static org.webrtc.CameraEnumerationAndroid.getNameOfFrontFacingDevice;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import org.webrtc.AudioSource;
+import org.webrtc.AudioTrack;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -14,9 +18,9 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
-import org.webrtc.VideoCapturer;
 import org.webrtc.VideoCapturerAndroid;
 import org.webrtc.VideoSource;
+import org.webrtc.VideoTrack;
 
 import java.util.LinkedList;
 
@@ -34,6 +38,12 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
     private MediaStream mLocalMedia;
 
     private VideoSource mVideoSource;
+
+    private VideoCapturerAndroid videoCapturer;
+
+    private VideoTrack videoTrack;
+
+    private AudioTrack audioTrack;
 
     private final RtcListener mListener;
 
@@ -123,25 +133,88 @@ public class WebRTCWrapper implements SdpObserver, PeerConnection.Observer {
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(60)));
         videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
 
-        mVideoSource = mPeerFactory.createVideoSource(getVideoCapture(true), videoConstraints);
-        mLocalMedia.addTrack(mPeerFactory.createVideoTrack("ARDAMSv0", mVideoSource));
+        videoCapturer = getVideoCapture();
+        mVideoSource = mPeerFactory.createVideoSource(videoCapturer, videoConstraints);
+        videoTrack = mPeerFactory.createVideoTrack("ARDAMSv0", mVideoSource);
+        mLocalMedia.addTrack(videoTrack);
 
         AudioSource audioSource = mPeerFactory.createAudioSource(new MediaConstraints());
-        mLocalMedia.addTrack(mPeerFactory.createAudioTrack("ARDAMSa0", audioSource));
+        audioTrack = mPeerFactory.createAudioTrack("ARDAMSa0", audioSource);
+        mLocalMedia.addTrack(audioTrack);
 
         if (mIfNeedAddStream) {
             mListener.onLocalStream(mLocalMedia);
         }
     }
-    
-    private VideoCapturer getVideoCapture(boolean useFrontCamera) {
-        String frontCameraDeviceName;
-        if (useFrontCamera)
-            frontCameraDeviceName = getNameOfFrontFacingDevice();
-        else
-            frontCameraDeviceName = getNameOfBackFacingDevice();
 
-        return VideoCapturerAndroid.create(frontCameraDeviceName);
+    public void setSpeakerphoneOn(@NonNull Context context) {
+        AudioManager audioManager = ((AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+        audioManager.setSpeakerphoneOn(true);
+    }
+
+    private VideoCapturerAndroid getVideoCapture() {
+        String frontCameraDeviceName = getNameOfFrontFacingDevice();
+
+        return VideoCapturerAndroid.create(frontCameraDeviceName, new VideoCapturerAndroid.CameraEventsHandler() {
+
+            @Override
+            public void onCameraError(String s) {
+
+            }
+
+            @Override
+            public void onCameraFreezed(String s) {
+
+            }
+
+            @Override
+            public void onCameraOpening(int i) {
+
+            }
+
+            @Override
+            public void onFirstFrameAvailable() {
+
+            }
+
+            @Override
+            public void onCameraClosed() {
+
+            }
+        });
+    }
+
+    public void changeCamera(boolean isFront){
+        Log.e(TAG, "isFront "+isFront);
+        videoCapturer.switchCamera(new VideoCapturerAndroid.CameraSwitchHandler() {
+            @Override
+            public void onCameraSwitchDone(boolean b) {
+                Log.e(TAG, "camera switch done? "+b);
+            }
+
+            @Override
+            public void onCameraSwitchError(String s) {
+                Log.e(TAG, "camera switch error "+s);
+            }
+        });
+    }
+
+    public void turnOffCamera(Boolean turnOff) {
+        Log.e(TAG, "turnOffCamera called with "+turnOff);
+        if (videoTrack != null) {
+            videoTrack.setEnabled(turnOff);
+        }
+    }
+
+    public void turnOffAudio(Boolean turnOff) {
+        Log.e(TAG, "turnOffAudio called with "+turnOff);
+        if (audioTrack != null) {
+            audioTrack.setEnabled(turnOff);
+        }
+    }
+
+    public void turnOffSpeaker(Boolean turnOff) {
+        Log.e(TAG, "turnOffSpeaker called with "+turnOff);
     }
 
     //Successfully created local sdp
