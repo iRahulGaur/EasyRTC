@@ -1,6 +1,8 @@
-# Notes
+# Note
 
 I have tested and fixed server and android part, iOS part is in objectiveC which I don't know, if anyone can upgrade iOS to swift, please give this repo your time
+
+---
 
 # EasyRTC  
 `EasyRTC` is a one-to-one webrtc session application.  
